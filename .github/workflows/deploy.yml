@@ -28,6 +28,9 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Debug registry
+        run: echo "Registry is ${{ steps.login-ecr.outputs.registry }}"
+
       - name: Build Docker image
         run: |
           docker build -t ${{ env.ECR_REPOSITORY }}:${{ github.sha }} .
