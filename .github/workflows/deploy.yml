@@ -49,7 +49,7 @@ jobs:
       # THIS IS YOUR CD TRIGGER (GitOps)
       - name: Update GitOps repo
         run: |
-          git clone https://github.com/jatindeshpande/gitops.git
+          git clone https://${{ secrets.GIT_TOKEN }}@github.com/jatindeshpande/gitops.git
           cd gitops/helm/devops-app
 
           # update Helm values.yaml
