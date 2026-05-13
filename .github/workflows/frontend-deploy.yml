@@ -1,18 +1,23 @@
-on: 
-  push: 
+name: Frontend CI-CD
+
+on:
+  push:
     branches:
       - main
 
+    paths:
+      - 'frontend/**'
+
 env:
   AWS_REGION: us-east-2
-  ECR_REPOSITORY: devops-app
+  ECR_REPOSITORY: frontend-app
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
     permissions:
-      id-token: write   # required for OIDC
+      id-token: write
       contents: read
 
     steps:
@@ -29,16 +34,16 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Debug registry
-        run: echo "Registry is ${{ steps.login-ecr.outputs.registry }}"
-
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.ECR_REPOSITORY }}:${{ github.sha }} .
+          docker build \
+          -t ${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+          ./frontend
 
       - name: Tag Docker image
         run: |
-          docker tag ${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+          docker tag \
+          ${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
           ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
 
       - name: Push to ECR
@@ -46,13 +51,13 @@ jobs:
           docker push \
           ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
 
-      # THIS IS YOUR CD TRIGGER (GitOps)
+      # GitOps update
       - name: Update GitOps repo
         run: |
           git clone https://${{ secrets.GIT_TOKEN }}@github.com/jatindeshpande/gitops.git
-          cd gitops/helm/devops-app
 
-          # update Helm values.yaml
+          cd gitops/helm/devops-app/templates/frontend
+
           sed -i "s/tag:.*/tag: ${{ github.sha }}/" values.yaml
 
           git config user.name "github-actions"
@@ -62,6 +67,6 @@ jobs:
             echo "No changes to commit"
           else
             git add .
-            git commit -m "Update image tag to ${{ github.sha }}"
+            git commit -m "Update frontend image tag to ${{ github.sha }}"
             git push
           fi
