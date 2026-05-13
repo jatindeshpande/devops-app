@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install dependencies first (good layer caching - this layer only
 # rebuilds when requirements.txt changes, not on every code change)
-COPY app/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy app code
